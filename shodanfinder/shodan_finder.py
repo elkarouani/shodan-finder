@@ -1,5 +1,6 @@
+from re import match
 import shodan
-import socket
+from socket import gethostbyname, gaierror
 
 class ShodanFinder :
     API = 'tedoHTagcSRqQm9LhIzUCqIqUvI06dHz'
@@ -9,7 +10,10 @@ class ShodanFinder :
         self.data_instance = {}
 
     def getHost(self, site):
-        return socket.gethostbyname(site)
+        if match(r'[a-zA-Z0-9]*.[a-zA-Z0-9]*', site):
+            return gethostbyname(site)
+        else:
+            raise gaierror
 
     def extractData(self, host):
         api = shodan.Shodan(self.API)
@@ -31,28 +35,35 @@ class ShodanFinder :
     def extractTechnologies(self, port):
         for port_container in self.data_instance['data']:
             if port_container['port'] == port:
-                return port_container['http']['components'] if hasattr(port_container['http'], 'components') else "Not Found"
+                return port_container['http']['components'] if port_container['http'] != None and port_container['http']['components'] != None else "Not Found"
 
     def shodanProcedure(self):
         sites_services = []
 
         for site in self.sites_list:
-            sites_services.append({'name': site})
+            try:
+                host = self.getHost(site)
+                sites_services.append({'name': site})
 
-            host = self.getHost(site)
-            self.extractData(host)
-            sites_services[len(sites_services) - 1]['host'] = host
+                self.extractData(host)
+                sites_services[len(sites_services) - 1]['host'] = host
 
-            ports = self.extractPortsList()
-            services = []
-            for port in ports:
-                services.append({
-                    'port': port,
-                    'serveur': self.extractUsedServer(port),
-                    'banner': self.extractBannere(port),
-                    'technologies': self.extractTechnologies(port)
-                })
-            sites_services[len(sites_services) - 1]['services'] = services
+                ports = self.extractPortsList()
+                services = []
+                
+                if ports == [] : services.append({'ports': "Not Found"})
+
+                for port in ports:
+                    services.append({
+                        'port': port,
+                        'serveur': self.extractUsedServer(port),
+                        'banner': self.extractBannere(port),
+                        'technologies': self.extractTechnologies(port)
+                    })
+                sites_services[len(sites_services) - 1]['services'] = services
+            except gaierror:
+                print(f"\n • The address requested ['{site}'] is not associated with any host. \n")
+                pass
+        
 
         return sites_services
-
