@@ -1,7 +1,7 @@
 import shodan
 import socket
 
-class Shodan_Finder :
+class ShodanFinder :
     API = 'tedoHTagcSRqQm9LhIzUCqIqUvI06dHz'
 
     def __init__(self, sites):

@@ -1,10 +1,10 @@
 from docx.shared import Pt
 from docx.enum.style import WD_STYLE_TYPE
 from docx import Document
-from shodan_finder import Shodan_Finder
+from shodan_finder import ShodanFinder
 from datetime import datetime
 
-shodan_instance = Shodan_Finder(['adacis.com', 'google.com'])
+shodan_instance = ShodanFinder(['adacis.com', 'google.com'])
 
 sites_services = shodan_instance.shodanProcedure()
 

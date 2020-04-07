@@ -1,5 +1,5 @@
 import unittest
-from shodan_finder import Shodan_Finder
+from shodan_finder import ShodanFinder
 
 class TestShodanFinder(unittest.TestCase):
 
@@ -7,7 +7,7 @@ class TestShodanFinder(unittest.TestCase):
     def setUpClass(cls):
         print('Starting tests on Shodan Finder Module')
         print('Initializing instances ...')
-        cls.shodan_finder_instance  = Shodan_Finder(['adacis.com'])
+        cls.shodan_finder_instance  = ShodanFinder(['adacis.com'])
         cls.shodan_finder_instance.extractData('52.58.78.16')
 
     def test_init(self):
