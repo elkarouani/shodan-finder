@@ -4,7 +4,7 @@ from docx import Document
 from shodan_finder import ShodanFinder
 from datetime import datetime
 
-shodan_instance = ShodanFinder(['adacis.com', 'google.com', 'facebook.net'])
+shodan_instance = ShodanFinder(['adacis.net', 'google.com', 'facebook.net'])
 
 sites_services = shodan_instance.shodanProcedure()
 

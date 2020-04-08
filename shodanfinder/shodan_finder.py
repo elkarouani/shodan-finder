@@ -25,6 +25,8 @@ class ShodanFinder :
     def extractUsedServer(self, port):
         for port_container in self.data_instance['data']:
             if port_container['port'] == port:
+                if not 'http' in port_container or not 'server' in port_container['http'] : return "Not Found"
+
                 return port_container['http']['server']
 
     def extractBannere(self, port):
@@ -35,7 +37,8 @@ class ShodanFinder :
     def extractTechnologies(self, port):
         for port_container in self.data_instance['data']:
             if port_container['port'] == port:
-                return port_container['http']['components'] if port_container['http'] != None and port_container['http']['components'] != None else "Not Found"
+                if not 'http' in port_container or not 'components' in port_container['http'] : return "Not Found"
+                return port_container['http']['components'] if port_container['http']['components'] != {} else "Not Found"
 
     def shodanProcedure(self):
         sites_services = []

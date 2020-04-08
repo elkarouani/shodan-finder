@@ -33,6 +33,9 @@ class TestShodanFinder(unittest.TestCase):
     def test_extract_used_server(self):
         print('Testing extract used server method ...')
         self.assertEqual(self.shodan_finder_instance.extractUsedServer(80), "openresty/1.13.6.2")
+        self.shodan_finder_instance.extractData('91.121.82.49')
+        self.assertEqual(self.shodan_finder_instance.extractUsedServer(993), "Not Found")
+        self.shodan_finder_instance.extractData('52.58.78.16')
         
     def test_extract_bannere(self):
         print('Testing extract bannere method ...')
@@ -40,7 +43,10 @@ class TestShodanFinder(unittest.TestCase):
     
     def test_extract_technologies(self):
         print('Testing extract technologies method ...')
-        self.assertEqual(type(self.shodan_finder_instance.extractTechnologies(80)).__name__, "dict")
+        self.assertIn(type(self.shodan_finder_instance.extractTechnologies(443)).__name__, ("dict", "str"))
+        self.shodan_finder_instance.extractData('91.121.82.49')
+        self.assertEqual(self.shodan_finder_instance.extractTechnologies(993), "Not Found")
+        self.shodan_finder_instance.extractData('52.58.78.16')
 
     def test_shodan_procedure(self):
         print('Testing shodan procedure method ...')
