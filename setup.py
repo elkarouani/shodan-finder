@@ -9,7 +9,7 @@ with open('requirements.txt') as f:
 	
 setuptools.setup(
      name='shodanfinder',  
-     version='1.4',
+     version='1.4.1',
      author="KDragon",
      author_email="elkarouani@gmail.com",
      description="Get an observation on any website on internet using Shodan",
