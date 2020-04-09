@@ -1,6 +1,11 @@
 from re import match
 import shodan
 from socket import gethostbyname, gaierror
+from docx.shared import Inches, Pt
+from docx.enum.style import WD_STYLE_TYPE
+from docx.enum.table import WD_ALIGN_VERTICAL
+from docx import Document
+from datetime import datetime
 
 class ShodanFinder :
     API = 'tedoHTagcSRqQm9LhIzUCqIqUvI06dHz'
@@ -70,3 +75,76 @@ class ShodanFinder :
         
 
         return sites_services
+
+    def printDocument(self, sites_services):
+        document_instance = Document()
+        document_instance.add_heading('Module X : Shodan Finder', 0)
+
+        table = document_instance.add_table(rows=1, cols=6)
+        table.autofit = False
+
+        hdr_cells = table.rows[0].cells
+        hdr_cells[0].text = 'Website'
+        hdr_cells[1].text = 'Host'
+        hdr_cells[2].text = 'Ports'
+        hdr_cells[3].text = 'Serveur'
+        hdr_cells[4].text = 'Banner'
+        hdr_cells[5].text = 'Technologies'
+
+        for site_service in sites_services: 
+            site_service_website_cells_to_merge = []
+            site_service_host_cells_to_merge = []
+            
+            for service in site_service['services']: 
+                new_row = table.add_row()
+
+                site_service_website_cells_to_merge.append(new_row.cells[0])
+                site_service_host_cells_to_merge.append(new_row.cells[1])
+            
+            for index in range(len(site_service_website_cells_to_merge) - 1):
+                current_cell = site_service_website_cells_to_merge[index]
+                next_cell = site_service_website_cells_to_merge[index + 1]
+                current_cell.merge(next_cell)
+            
+            for index in range(len(site_service_host_cells_to_merge) - 1):
+                current_cell = site_service_host_cells_to_merge[index]
+                next_cell = site_service_host_cells_to_merge[index + 1]
+                current_cell.merge(next_cell)        
+            
+
+        widths = (Pt(80), Pt(80), Pt(80), Pt(80), Pt(60), Pt(80))
+        for row in table.rows:
+            for idx, width in enumerate(widths):
+                row.cells[idx].width = width
+
+
+        row_start = 1
+        for index in range(len(sites_services)):
+            row_instance = table.rows[row_start].cells
+            row_instance[0].text = sites_services[index]['name']
+            row_instance[0].vertical_alignment = WD_ALIGN_VERTICAL.TOP
+            row_instance[1].text = sites_services[index]['host']
+            row_instance[1].vertical_alignment = WD_ALIGN_VERTICAL.TOP
+
+            for service in sites_services[index]['services']:
+                row_instance[2].text = str(service['port'])
+                row_instance[2].vertical_alignment = WD_ALIGN_VERTICAL.TOP
+                row_instance[3].text = str(service['serveur'])
+                row_instance[3].vertical_alignment = WD_ALIGN_VERTICAL.TOP
+                row_instance[4].text = str(service['banner'])
+                paragraph = row_instance[4].paragraphs[0]
+                run = paragraph.runs
+                font = run[0].font
+                font.size = Pt(8)
+                row_instance[4].vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                row_instance[5].text = str(service['technologies'])
+                row_instance[5].vertical_alignment = WD_ALIGN_VERTICAL.TOP
+
+                row_start += 1
+                row_instance = table.rows[row_start].cells if row_start < len(table.rows) else None
+
+
+        date = datetime.now()
+        document_instance.save("results/shodan_finder_result_{}.docx".format(date.strftime("%m%d%Y%H%M%S")))
+
+        print('The document has been generated successfully')
