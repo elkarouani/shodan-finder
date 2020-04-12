@@ -7,12 +7,16 @@ from docx.enum.table import WD_ALIGN_VERTICAL
 from docx import Document
 from datetime import datetime
 
-class ShodanFinder :
-    API = 'tedoHTagcSRqQm9LhIzUCqIqUvI06dHz'
+try:
+    from secret import SHODAN_API_KEY
+except :
+    pass
 
+class ShodanFinder :
     def __init__(self, sites):
         self.sites_list = sites
         self.data_instance = {}
+        self.shodan_key = SHODAN_API_KEY if 'SHODAN_API_KEY' in globals() else ""
 
     def getHost(self, site):
         if match(r'[a-zA-Z0-9]*.[a-zA-Z0-9]*', site):
@@ -20,8 +24,11 @@ class ShodanFinder :
         else:
             raise gaierror
 
+    def setAPIKey(self, key):
+        self.shodan_key = key
+
     def extractData(self, host):
-        api = shodan.Shodan(self.API)
+        api = shodan.Shodan(self.shodan_key)
         self.data_instance = api.host(host)
 
     def extractPortsList(self):
@@ -80,26 +87,33 @@ class ShodanFinder :
         document_instance = Document()
         document_instance.add_heading('Module X : Shodan Finder', 0)
 
-        table = document_instance.add_table(rows=1, cols=6)
+        table = document_instance.add_table(rows=1, cols=5)
         table.autofit = False
+        table.style = 'Table Grid'
 
         hdr_cells = table.rows[0].cells
         hdr_cells[0].text = 'Website'
         hdr_cells[1].text = 'Host'
         hdr_cells[2].text = 'Ports'
         hdr_cells[3].text = 'Serveur'
-        hdr_cells[4].text = 'Banner'
-        hdr_cells[5].text = 'Technologies'
+        hdr_cells[4].text = 'Technologies'
 
         for site_service in sites_services: 
             site_service_website_cells_to_merge = []
             site_service_host_cells_to_merge = []
+
             
             for service in site_service['services']: 
-                new_row = table.add_row()
+                new_row_1 = table.add_row()
+                new_row_2 = table.add_row()
 
-                site_service_website_cells_to_merge.append(new_row.cells[0])
-                site_service_host_cells_to_merge.append(new_row.cells[1])
+                new_row_2.cells[2].merge(new_row_2.cells[3])
+                new_row_2.cells[3].merge(new_row_2.cells[4])
+
+                site_service_website_cells_to_merge.append(new_row_1.cells[0])
+                site_service_website_cells_to_merge.append(new_row_2.cells[0])
+                site_service_host_cells_to_merge.append(new_row_1.cells[1])
+                site_service_host_cells_to_merge.append(new_row_2.cells[1])
             
             for index in range(len(site_service_website_cells_to_merge) - 1):
                 current_cell = site_service_website_cells_to_merge[index]
@@ -110,13 +124,6 @@ class ShodanFinder :
                 current_cell = site_service_host_cells_to_merge[index]
                 next_cell = site_service_host_cells_to_merge[index + 1]
                 current_cell.merge(next_cell)        
-            
-
-        widths = (Pt(80), Pt(80), Pt(80), Pt(80), Pt(60), Pt(80))
-        for row in table.rows:
-            for idx, width in enumerate(widths):
-                row.cells[idx].width = width
-
 
         row_start = 1
         for index in range(len(sites_services)):
@@ -131,14 +138,22 @@ class ShodanFinder :
                 row_instance[2].vertical_alignment = WD_ALIGN_VERTICAL.TOP
                 row_instance[3].text = str(service['serveur'])
                 row_instance[3].vertical_alignment = WD_ALIGN_VERTICAL.TOP
-                row_instance[4].text = str(service['banner'])
-                paragraph = row_instance[4].paragraphs[0]
-                run = paragraph.runs
-                font = run[0].font
-                font.size = Pt(8)
-                row_instance[4].vertical_alignment = WD_ALIGN_VERTICAL.CENTER
-                row_instance[5].text = str(service['technologies'])
-                row_instance[5].vertical_alignment = WD_ALIGN_VERTICAL.TOP
+
+                if service['technologies'] != "Not Found" :
+                    for technologie in service['technologies']:
+                        technologie_type = service['technologies'][technologie]['categories'][0]
+
+                        row_instance[4].add_paragraph(f'• {technologie_type} :')
+                        row_instance[4].add_paragraph(f'- {technologie}')
+                else :
+                    row_instance[4].text = str(service['technologies'])
+                    row_instance[4].vertical_alignment = WD_ALIGN_VERTICAL.TOP
+
+                row_start += 1
+                row_instance = table.rows[row_start].cells if row_start < len(table.rows) else None
+
+                row_instance[2].text = str(service['banner'])
+                row_instance[2].vertical_alignment = WD_ALIGN_VERTICAL.TOP
 
                 row_start += 1
                 row_instance = table.rows[row_start].cells if row_start < len(table.rows) else None
